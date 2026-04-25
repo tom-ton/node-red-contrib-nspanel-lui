@@ -157,6 +157,7 @@ export class NSPanelController extends AbstractNSPanelController {
             panelNodeTopic: panelConfig.panel.topic,
             autoUpdate: panelConfig.panel.autoUpdate,
             tasmotaOtaUrl: panelConfig.panel.tasmotaOtaUrl,
+            checkForTasmotaUpdates: panelConfig.panel.checkForTasmotaUpdates !== false,
         })
         panelUpdater.on('update', (fwEventArgs: FirmwareEventArgs) => this.onUpdateEvent(fwEventArgs))
         this._panelUpdater = panelUpdater

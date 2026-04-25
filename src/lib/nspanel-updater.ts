@@ -293,7 +293,12 @@ export class NSPanelUpdater extends nEvents.EventEmitter implements IPanelUpdate
     private _acquireVersions(): Promise<VersionAcquisitionStatus> {
         this._updateVersionData.versionAcquisitionStatus = VersionAcquisitionStatus.None
 
-        this.getCurrentTasmotaVersion()
+        if (this._options.checkForTasmotaUpdates !== false) {
+            this.getCurrentTasmotaVersion()
+        } else {
+            this._updateVersionData.versionAcquisitionStatus |=
+                VersionAcquisitionStatus.TasmotaVersionCurrent | VersionAcquisitionStatus.TasmotaVersionLatest
+        }
         this.getCurrentBerryDriverVersion()
         this.getCurrentHmiVersion()
         this.getLatestVersion()
@@ -307,14 +312,16 @@ export class NSPanelUpdater extends nEvents.EventEmitter implements IPanelUpdate
                     (self._updateVersionData.versionAcquisitionStatus & VersionAcquisitionStatus.AllAcquired) ===
                     VersionAcquisitionStatus.AllAcquired
                 ) {
-                    if (
-                        semver.gt(
-                            self._updateVersionData.versions.latest.tasmota.version,
-                            self._updateVersionData.versions.current.tasmota.version
-                        )
-                    ) {
-                        self._updateVersionData.versionAcquisitionStatus |=
-                            VersionAcquisitionStatus.TasmotaUpdateAvailable
+                    if (self._options.checkForTasmotaUpdates !== false) {
+                        if (
+                            semver.gt(
+                                self._updateVersionData.versions.latest.tasmota.version,
+                                self._updateVersionData.versions.current.tasmota.version
+                            )
+                        ) {
+                            self._updateVersionData.versionAcquisitionStatus |=
+                                VersionAcquisitionStatus.TasmotaUpdateAvailable
+                        }
                     }
 
                     if (
@@ -462,15 +469,17 @@ onEvent default {"type":"hw","date":"2023-10-16T15:15:05.211Z","event":"","sourc
     }
 
     private getLatestVersion(): void {
-        axios.get<GithubApiReleaseSchema>(URL_TASMOTA_RELEASES_LATEST_META, axiosRequestOptions).then((response) => {
-            const { data } = response
-            if (data?.tag_name != null) {
-                const tasmotaVersionLatest = String.prototype.substring.call(data.tag_name, 1)
-                this._updateVersionData.versions.latest.tasmota = { version: tasmotaVersionLatest }
-                this._updateVersionData.versionAcquisitionStatus |= VersionAcquisitionStatus.TasmotaVersionLatest
-                // TODO: pick right asset
-            }
-        })
+        if (this._options.checkForTasmotaUpdates !== false) {
+            axios.get<GithubApiReleaseSchema>(URL_TASMOTA_RELEASES_LATEST_META, axiosRequestOptions).then((response) => {
+                const { data } = response
+                if (data?.tag_name != null) {
+                    const tasmotaVersionLatest = String.prototype.substring.call(data.tag_name, 1)
+                    this._updateVersionData.versions.latest.tasmota = { version: tasmotaVersionLatest }
+                    this._updateVersionData.versionAcquisitionStatus |= VersionAcquisitionStatus.TasmotaVersionLatest
+                    // TODO: pick right asset
+                }
+            })
+        }
 
         axios.get<string>(URL_BERRYDRIVER_LATEST, axiosRequestOptions).then((response) => {
             if (response?.data != null) {

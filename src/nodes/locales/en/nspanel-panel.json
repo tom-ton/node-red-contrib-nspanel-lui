@@ -128,6 +128,7 @@
             "telePeriodDescription": "(0=disabled, 1=firmware default)",
             "enableUpdates": "Enable check for updates",
             "autoUpdate": "Install new firmware automatically",
+            "checkForTasmotaUpdates": "Check for Tasmota firmware updates",
             "timeToCheckForUpdates": "Time to check for updates",
             "tasmotaOtaUrl": "Tasmota OTA Url",
             "dateLanguage": "Language for date display",
