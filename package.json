@@ -42,6 +42,13 @@
     "engines": {
         "node": ">=18.0.0"
     },
+    "files": [
+        "lib/",
+        "nodes/",
+        "resources/",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
         "lint": "eslint --ext .ts .",
         "clean": "rimraf build lib nodes resources",
@@ -53,8 +60,7 @@
         "build": "npm run build:ts && npm run build:js && npm run build:res",
         "test": "jest",
         "prepare": "npm run build && npx copyfiles --exclude **/types.js --up 1 build/lib/**/* build/nodes/**/* build/resources/**/* .",
-        "prepack": "npm run clean && npm run build && npx copyfiles --exclude **/types.js --up 1 build/lib/**/* build/nodes/**/* build/resources/**/* .",
-        "postpack": "rimraf lib nodes resources"
+        "prepack": "npm run clean && npm run build && npx copyfiles --exclude **/types.js --up 1 build/lib/**/* build/nodes/**/* build/resources/**/* ."
     },
     "devDependencies": {
         "@types/jest": "^29.5.11",
