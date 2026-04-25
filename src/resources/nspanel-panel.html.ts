@@ -119,6 +119,10 @@
                 $('#node-config-input-panelDimLowNightStartTime').val(this.panelDimLowNightStartTime)
                 $('#node-config-input-timeToCheckForUpdates').val(this.timeToCheckForUpdates)
 
+                if (typeof this.checkForTasmotaUpdates === 'undefined') {
+                    $('#node-config-input-checkForTasmotaUpdates').prop('checked', true)
+                }
+
                 const enableUpdatesField = $('#node-config-input-enableUpdates')
                 enableUpdatesField.on('change', () => {
                     const disable = enableUpdatesField.is(':checked') === false
