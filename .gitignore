@@ -1,4 +1,7 @@
 build/
+lib/
+nodes/
+resources/
 deploy.bat
 *.tsbuildinfo
 

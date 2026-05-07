@@ -27,6 +27,7 @@
                 detachRelays: { value: false },
                 enableUpdates: { value: true },
                 autoUpdate: { value: false },
+                checkForTasmotaUpdates: { value: true },
                 timeToCheckForUpdates: {
                     value: '04:00',
                     validate(v) {

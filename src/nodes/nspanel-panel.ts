@@ -26,6 +26,7 @@ interface NSPanelConfig extends INodeConfig {
     enableUpdates: boolean
     timeToCheckForUpdates: string
     autoUpdate: boolean
+    checkForTasmotaUpdates?: boolean
     tasmotaOtaUrl: string
 
     panelTimeout: number
@@ -95,6 +96,7 @@ module.exports = (RED) => {
                     enableUpdates: this.config.enableUpdates,
                     timeToCheckForUpdates: NSPanelUtils.splitTime(this.config.timeToCheckForUpdates),
                     autoUpdate: this.config.autoUpdate,
+                    checkForTasmotaUpdates: this.config.checkForTasmotaUpdates !== false,
                     tasmotaOtaUrl: this.config.tasmotaOtaUrl,
 
                     panelTimeout: this.config.panelTimeout,

@@ -43,6 +43,7 @@ export interface PanelParameters {
     enableUpdates: boolean
     timeToCheckForUpdates: SplitTime
     autoUpdate: boolean
+    checkForTasmotaUpdates: boolean
     tasmotaOtaUrl: string
 
     detachRelays: boolean

@@ -48,6 +48,7 @@ Brightness settings for day and night
 
 -   **Enable check for updates**: Enables checking for updates at the time configured<br/>
 -   **Install new firmware automatically**: Install new updates automatically, otherwise a notification is displayed on panel<br/>
+-   **Check for Tasmota firmware updates**: When disabled, skips comparing the panel Tasmota version to upstream releases (useful for custom builds); Berry driver and HMI checks are unchanged<br/>
 -   **Time to check for updates**: Time of day to perform update check<br/>
 -   **Tasmota OTA Url**: Url to the Tasmota firmware to use<br/>
 
