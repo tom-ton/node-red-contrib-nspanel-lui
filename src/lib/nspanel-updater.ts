@@ -312,39 +312,45 @@ export class NSPanelUpdater extends nEvents.EventEmitter implements IPanelUpdate
                     (self._updateVersionData.versionAcquisitionStatus & VersionAcquisitionStatus.AllAcquired) ===
                     VersionAcquisitionStatus.AllAcquired
                 ) {
-                    if (self._options.checkForTasmotaUpdates !== false) {
+                    try {
+                        if (self._options.checkForTasmotaUpdates !== false) {
+                            if (
+                                semver.gt(
+                                    self._updateVersionData.versions.latest.tasmota.version,
+                                    self._updateVersionData.versions.current.tasmota.version
+                                )
+                            ) {
+                                self._updateVersionData.versionAcquisitionStatus |=
+                                    VersionAcquisitionStatus.TasmotaUpdateAvailable
+                            }
+                        }
+
                         if (
-                            semver.gt(
-                                self._updateVersionData.versions.latest.tasmota.version,
-                                self._updateVersionData.versions.current.tasmota.version
-                            )
+                            self._updateVersionData.versions.latest.berryDriver.version >
+                            self._updateVersionData.versions.current.berryDriver.version
                         ) {
                             self._updateVersionData.versionAcquisitionStatus |=
-                                VersionAcquisitionStatus.TasmotaUpdateAvailable
+                                VersionAcquisitionStatus.BerryDriverUpdateAvailable
                         }
-                    }
-
-                    if (
-                        self._updateVersionData.versions.latest.berryDriver.version >
-                        self._updateVersionData.versions.current.berryDriver.version
-                    ) {
-                        self._updateVersionData.versionAcquisitionStatus |=
-                            VersionAcquisitionStatus.BerryDriverUpdateAvailable
-                    }
-                    if (
-                        self._updateVersionData.versions.latest.hmi.internalVersion >
-                        self._updateVersionData.versions.current.hmi.internalVersion
-                    ) {
-                        self._updateVersionData.versionAcquisitionStatus |= VersionAcquisitionStatus.HmiUpdateAvailable
+                        if (
+                            self._updateVersionData.versions.latest.hmi.internalVersion >
+                            self._updateVersionData.versions.current.hmi.internalVersion
+                        ) {
+                            self._updateVersionData.versionAcquisitionStatus |=
+                                VersionAcquisitionStatus.HmiUpdateAvailable
+                        }
+                    } catch (err) {
+                        log.error(`Could not compare versions for panel ${self._options.panelNodeTopic}: ${err}`)
+                        return reject(self._updateVersionData.versionAcquisitionStatus)
                     }
 
                     return resolve(self._updateVersionData.versionAcquisitionStatus)
                 }
 
-                setTimeout(waitForDataAcquisition, 1000)
-
                 i -= 1
-                if (i === 0) reject(self._updateVersionData.versionAcquisitionStatus)
+                if (i <= 0) return reject(self._updateVersionData.versionAcquisitionStatus)
+
+                setTimeout(waitForDataAcquisition, 1000)
             })()
         })
     }
@@ -470,42 +476,61 @@ onEvent default {"type":"hw","date":"2023-10-16T15:15:05.211Z","event":"","sourc
 
     private getLatestVersion(): void {
         if (this._options.checkForTasmotaUpdates !== false) {
-            axios.get<GithubApiReleaseSchema>(URL_TASMOTA_RELEASES_LATEST_META, axiosRequestOptions).then((response) => {
-                const { data } = response
-                if (data?.tag_name != null) {
-                    const tasmotaVersionLatest = String.prototype.substring.call(data.tag_name, 1)
-                    this._updateVersionData.versions.latest.tasmota = { version: tasmotaVersionLatest }
-                    this._updateVersionData.versionAcquisitionStatus |= VersionAcquisitionStatus.TasmotaVersionLatest
-                    // TODO: pick right asset
-                }
-            })
+            axios
+                .get<GithubApiReleaseSchema>(URL_TASMOTA_RELEASES_LATEST_META, axiosRequestOptions)
+                .then((response) => {
+                    const { data } = response
+                    if (data?.tag_name != null) {
+                        const tasmotaVersionLatest = String.prototype.substring.call(data.tag_name, 1)
+                        this._updateVersionData.versions.latest.tasmota = { version: tasmotaVersionLatest }
+                        this._updateVersionData.versionAcquisitionStatus |=
+                            VersionAcquisitionStatus.TasmotaVersionLatest
+                        // TODO: pick right asset
+                    }
+                })
+                .catch((err) => this.logFetchError(URL_TASMOTA_RELEASES_LATEST_META, err))
         }
 
-        axios.get<string>(URL_BERRYDRIVER_LATEST, axiosRequestOptions).then((response) => {
-            if (response?.data != null) {
-                const match = response.data.match(BERRY_DRIVER_REGEX)
+        axios
+            .get<string>(URL_BERRYDRIVER_LATEST, axiosRequestOptions)
+            .then((response) => {
+                if (typeof response?.data === 'string') {
+                    const match = response.data.match(BERRY_DRIVER_REGEX)
 
-                if (match?.groups != null && match.groups['version'] != null) {
-                    this._updateVersionData.versions.latest.berryDriver = { version: `${match.groups['version']}` }
-                    this._updateVersionData.versionAcquisitionStatus |=
-                        VersionAcquisitionStatus.BerryDriverVersionLatest
-                }
-            }
-        })
-
-        axios.get<string>(URL_NLUI_LATEST, axiosRequestOptions).then((response) => {
-            if (response?.data != null) {
-                const match = response.data.match(NLUI_HMI_VERSION_REGEX)
-
-                if (match?.groups != null && match.groups['version'] != null && match.groups['internalVersion']) {
-                    this._updateVersionData.versions.latest.hmi = {
-                        internalVersion: `${match.groups['internalVersion']}`,
-                        version: `${match.groups['version']}`,
+                    if (match?.groups != null && match.groups['version'] != null) {
+                        this._updateVersionData.versions.latest.berryDriver = { version: `${match.groups['version']}` }
+                        this._updateVersionData.versionAcquisitionStatus |=
+                            VersionAcquisitionStatus.BerryDriverVersionLatest
                     }
-                    this._updateVersionData.versionAcquisitionStatus |= VersionAcquisitionStatus.HmiVersionLatest
                 }
-            }
-        })
+            })
+            .catch((err) => this.logFetchError(URL_BERRYDRIVER_LATEST, err))
+
+        axios
+            .get<string>(URL_NLUI_LATEST, axiosRequestOptions)
+            .then((response) => {
+                if (typeof response?.data === 'string') {
+                    const match = response.data.match(NLUI_HMI_VERSION_REGEX)
+
+                    if (match?.groups != null && match.groups['version'] != null && match.groups['internalVersion']) {
+                        this._updateVersionData.versions.latest.hmi = {
+                            internalVersion: `${match.groups['internalVersion']}`,
+                            version: `${match.groups['version']}`,
+                        }
+                        this._updateVersionData.versionAcquisitionStatus |= VersionAcquisitionStatus.HmiVersionLatest
+                    }
+                }
+            })
+            .catch((err) => this.logFetchError(URL_NLUI_LATEST, err))
+    }
+
+    private logFetchError(url: string, err: unknown): void {
+        const reason = axios.isAxiosError(err)
+            ? err.response != null
+                ? `status code ${err.response.status}`
+                : err.message
+            : String(err)
+        log.warn(`Could not fetch latest version information from ${url} (${reason})`)
     }
     // #endregion version information retrieval
 
