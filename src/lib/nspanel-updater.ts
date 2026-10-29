@@ -67,7 +67,7 @@ const URL_TASMOTA_RELEASES_LATEST_META = 'https://api.github.com/repositories/80
 const URL_BERRYDRIVER_LATEST = 'https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/tasmota/autoexec.be'
 // const URL_NLUI_RELEASES_LATEST_META = 'https://api.github.com/repos/joBr99/nspanel-lovelace-ui/releases/latest'
 const URL_NLUI_LATEST =
-    'https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/apps/nspanel-lovelace-ui/nspanel-lovelace-ui.py'
+    'https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/nspanel-lovelace-ui/rootfs/usr/bin/mqtt-manager/firmware.py'
 
 const URL_HMI_BASE = 'http://nspanel.pky.eu/lovelace-ui/github/'
 
@@ -79,7 +79,7 @@ const axiosRequestOptions: AxiosRequestConfig = {
 
 const BERRY_DRIVER_REGEX = /version_of_this_script\s*=\s*(?<version>\d+)/
 const NLUI_HMI_VERSION_REGEX =
-    /desired_display_firmware_version\s*=\s*(?<internalVersion>\d+)\s*version\s*=\s*['"]v(?<version>.*)['"]/
+    /DISPLAY_VERSION\s*=\s*(?<internalVersion>\d+)\s*DISPLAY_RELEASE\s*=\s*['"]v(?<version>[^'"]+)['"]/
 
 const log = Logger('NSPanelUpdater')
 
@@ -326,15 +326,15 @@ export class NSPanelUpdater extends nEvents.EventEmitter implements IPanelUpdate
                         }
 
                         if (
-                            self._updateVersionData.versions.latest.berryDriver.version >
-                            self._updateVersionData.versions.current.berryDriver.version
+                            Number(self._updateVersionData.versions.latest.berryDriver.version) >
+                            Number(self._updateVersionData.versions.current.berryDriver.version)
                         ) {
                             self._updateVersionData.versionAcquisitionStatus |=
                                 VersionAcquisitionStatus.BerryDriverUpdateAvailable
                         }
                         if (
-                            self._updateVersionData.versions.latest.hmi.internalVersion >
-                            self._updateVersionData.versions.current.hmi.internalVersion
+                            Number(self._updateVersionData.versions.latest.hmi.internalVersion) >
+                            Number(self._updateVersionData.versions.current.hmi.internalVersion)
                         ) {
                             self._updateVersionData.versionAcquisitionStatus |=
                                 VersionAcquisitionStatus.HmiUpdateAvailable
